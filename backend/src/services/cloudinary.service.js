@@ -78,6 +78,9 @@ class CloudinaryService {
    */
   generateOptimizedUrl(publicId) {
     if (!publicId) return null;
+    if (typeof publicId === 'string' && (publicId.startsWith('http://') || publicId.startsWith('https://'))) {
+      return publicId;
+    }
     return cloudinary.url(publicId, {
       transformation: this.getTransformationOptions(),
       secure: true

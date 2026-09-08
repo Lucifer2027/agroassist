@@ -10,7 +10,7 @@ const genAI = new GoogleGenerativeAI(geminiConfig.apiKey);
  */
 const generateActionableRecommendations = async (context, language = 'en', maxRetries = 2, timeoutMs = 25000) => {
   const model = genAI.getGenerativeModel({
-    model: geminiConfig.modelName || 'gemini-1.5-flash',
+    model: geminiConfig.modelName || 'gemini-3-flash-preview',
     generationConfig: {
       responseMimeType: 'application/json',
       temperature: 0.3

@@ -30,7 +30,7 @@ class GeminiService {
     };
 
     // 7-9. Call Gemini AI API with image & prompt
-    const { rawResponse } = await analyzeLeafImageWithGemini(imageUrl, cropContext);
+    const { rawResponse } = await analyzeLeafImageWithGemini(imageUrl, cropContext, asset.original_url);
 
     // 10-11. Validate Gemini AI response strictly against schema
     const validated = parseAndValidateGeminiResponse(rawResponse);

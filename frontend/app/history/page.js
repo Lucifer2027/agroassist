@@ -159,7 +159,7 @@ export default function GlobalHistoryPage() {
       header: 'Action',
       key: 'id',
       render: (_, row) => (
-        <Link href={`/analysis/${row.id || row.analysis_id}`}>
+        <Link href={`/analysis/${row.id || row.analysisId || row.analysis_id}`}>
           <Button size="sm" variant="ghost" leftIcon={<Eye className="w-3.5 h-3.5" />}>
             Inspect
           </Button>
@@ -244,15 +244,15 @@ export default function GlobalHistoryPage() {
           <Card className="p-4 space-y-4">
             {/* Desktop & Tablet Data Table */}
             <div className="hidden md:block">
-              <DataTable columns={tableColumns} data={filteredHistory} onRowClick={(row) => router.push(`/analysis/${row.id || row.analysis_id}`)} />
+              <DataTable columns={tableColumns} data={filteredHistory} onRowClick={(row) => router.push(`/analysis/${row.id || row.analysisId || row.analysis_id}`)} />
             </div>
 
             {/* Mobile Cards (Preventing Wide Table Scrollbar on Mobile) */}
             <div className="md:hidden space-y-3">
               {filteredHistory.map((scan, idx) => (
                 <div
-                  key={scan.id || idx}
-                  onClick={() => router.push(`/analysis/${scan.id || scan.analysis_id}`)}
+                  key={scan.id || scan.analysisId || idx}
+                  onClick={() => router.push(`/analysis/${scan.id || scan.analysisId || scan.analysis_id}`)}
                   className="p-4 rounded-xl glass-panel border border-slate-800 space-y-3 cursor-pointer hover:border-emerald-500/40"
                 >
                   <div className="flex items-start justify-between">

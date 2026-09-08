@@ -11,6 +11,21 @@ class RecommendationRepository {
       priority = 'medium'
     } = recommendationData;
 
+    const parseId = (val) => {
+      if (val === null || val === undefined || val === 'null' || val === 'undefined') return null;
+      const num = Number(val);
+      return !isNaN(num) && num > 0 ? num : null;
+    };
+
+    const safeAnalysisId = parseId(disease_analysis_id);
+    const safeFarmId = parseId(farm_id);
+    const safeCropId = parseId(crop_id);
+
+    let validPriority = (priority || 'medium').toString().toLowerCase();
+    if (!['low', 'medium', 'high', 'urgent'].includes(validPriority)) {
+      validPriority = 'medium';
+    }
+
     const sql = `
       INSERT INTO recommendations (
         disease_analysis_id, farm_id, crop_id, recommendation_type, recommendation_text, priority
@@ -18,7 +33,7 @@ class RecommendationRepository {
     `;
 
     const params = [
-      disease_analysis_id, farm_id, crop_id, recommendation_type, recommendation_text, priority
+      safeAnalysisId, safeFarmId, safeCropId, recommendation_type, recommendation_text, validPriority
     ];
 
     const result = await query(sql, params, conn);

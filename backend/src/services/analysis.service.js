@@ -46,7 +46,7 @@ class AnalysisService {
     }
 
     // STEP 8-9: Send Image to Gemini AI & Validate Response strictly
-    const { rawResponse } = await analyzeLeafImageWithGemini(optimizedImageUrl, cropContext);
+    const { rawResponse } = await analyzeLeafImageWithGemini(optimizedImageUrl, cropContext, asset.original_url);
     const validatedGemini = parseAndValidateGeminiResponse(rawResponse);
 
     // STEP 10: Calculate Agricultural Risk Score & Level
@@ -91,7 +91,7 @@ class AnalysisService {
       });
     } catch (dbError) {
       logger.error(`[TraceID: ${traceId}] MySQL transaction failed: ${dbError.message}`);
-      throw ApiError.internal('Failed to persist operational analysis in database', 'DATABASE_TRANSACTION_FAILED');
+      throw ApiError.internal(`Failed to persist operational analysis in database: ${dbError.message}`, 'DATABASE_TRANSACTION_FAILED');
     }
 
     // STEP 13: Asynchronously Synchronize Historical Data to Snowflake Data Warehouse

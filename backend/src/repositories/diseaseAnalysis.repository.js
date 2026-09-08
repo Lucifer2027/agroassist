@@ -31,6 +31,27 @@ class DiseaseAnalysisRepository {
       analysis_status = 'completed'
     } = analysisData;
 
+    const parseId = (val) => {
+      if (val === null || val === undefined || val === 'null' || val === 'undefined') return null;
+      const num = Number(val);
+      return !isNaN(num) && num > 0 ? num : null;
+    };
+
+    const safeUserId = parseId(user_id);
+    const safeFarmId = parseId(farm_id);
+    const safeCropId = parseId(crop_id);
+    const safeAssetId = parseId(cloudinary_asset_id);
+
+    let validSeverity = (severity || 'medium').toString().toLowerCase();
+    if (!['low', 'medium', 'high'].includes(validSeverity)) {
+      validSeverity = validSeverity === 'critical' ? 'high' : 'medium';
+    }
+
+    let validRisk = (environmental_risk_level || 'medium').toString().toLowerCase();
+    if (!['low', 'medium', 'high'].includes(validRisk)) {
+      validRisk = validRisk === 'critical' ? 'high' : 'medium';
+    }
+
     const sql = `
       INSERT INTO disease_analyses (
         user_id, farm_id, crop_id, cloudinary_asset_id,
@@ -41,8 +62,8 @@ class DiseaseAnalysisRepository {
     `;
 
     const params = [
-      user_id, farm_id, crop_id, cloudinary_asset_id,
-      disease_name, confidence_score, severity, environmental_risk_level,
+      safeUserId, safeFarmId, safeCropId, safeAssetId,
+      disease_name, Number(confidence_score) || 90.0, validSeverity, validRisk,
       JSON.stringify(symptoms),
       JSON.stringify(recommendations),
       JSON.stringify(prevention_steps),
@@ -152,17 +173,34 @@ class DiseaseAnalysisRepository {
     const rows = await query(selectSql, selectParams, conn);
 
     const items = rows.map((r) => ({
+      id: r.analysisId,
+      analysis_id: r.analysisId,
       analysisId: r.analysisId,
+      farm_id: r.farmId,
+      farmId: r.farmId,
+      crop_id: r.cropId,
+      cropId: r.cropId,
+      crop_name: r.cropName,
+      cropName: r.cropName,
       crop: {
         cropId: r.cropId,
         cropName: r.cropName,
         cropVariety: r.cropVariety
       },
+      disease_name: r.diseaseName,
+      diseaseName: r.diseaseName,
+      diagnosis: r.diseaseName,
       disease: r.diseaseName,
+      confidence_score: r.confidence,
+      confidenceScore: r.confidence,
       confidence: r.confidence,
       severity: r.severity,
+      environmental_risk_level: r.risk,
+      risk_score: r.risk,
       risk: r.risk,
       image: r.optimizedUrl,
+      created_at: r.date,
+      createdAt: r.date,
       date: r.date,
       recommendationSummary: typeof r.recommendationSummary === 'string' ? JSON.parse(r.recommendationSummary) : r.recommendationSummary
     }));

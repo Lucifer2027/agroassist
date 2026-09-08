@@ -180,7 +180,7 @@ export default function AnalysisHistoryPage() {
                     <Badge variant={scan.severity === 'high' ? 'critical' : scan.severity === 'medium' ? 'warning' : 'success'}>
                       {(scan.severity || 'low').toUpperCase()}
                     </Badge>
-                    <Link href={`/analysis/${scan.id || scan.analysis_id}`}>
+                    <Link href={`/analysis/${scan.id || scan.analysisId || scan.analysis_id}`}>
                       <Button size="sm" variant="ghost" leftIcon={<Eye className="w-3.5 h-3.5" />}>
                         Inspect
                       </Button>

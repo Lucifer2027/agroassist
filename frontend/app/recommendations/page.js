@@ -125,32 +125,45 @@ export default function RecommendationsPage() {
     setError(null);
 
     try {
-      // 1. Try to fetch existing recommendation for scan
-      const res = await recommendationsApi.getRecommendationsByAnalysisId(selectedScanId);
-      const recObj = res.data?.recommendations || res.data?.recommendation || res.recommendations || res.data || res;
-      if (Array.isArray(recObj) && recObj.length > 0) {
-        setRecommendation(recObj);
-      } else if (recObj && (recObj.recommendations || recObj.preventionSteps)) {
-        setRecommendation(recObj);
-      } else {
-        // 2. If not saved yet, generate AI recommendation via backend
-        const activeScan = (Array.isArray(scans) ? scans : []).find(
-          (s) => String(s.id || s.analysis_id) === String(selectedScanId)
-        );
-        const targetFarmId = activeScan?.farm_id || activeScan?.farmId || selectedFarmId;
-        const targetCropId = activeScan?.crop_id || activeScan?.cropId;
-        if (targetCropId) {
-          const genRes = await recommendationsApi.generateRecommendations({
-            farmId: targetFarmId,
-            cropId: targetCropId,
-            diseaseAnalysisId: selectedScanId,
-            language: selectedLanguage,
-          });
-          const gObj = genRes.data?.recommendations || genRes.data?.recommendation || genRes.data || genRes;
-          setRecommendation(gObj);
-        } else {
-          setRecommendation(null);
+      // If language is English, attempt to load stored record first
+      if (selectedLanguage === 'en') {
+        const res = await recommendationsApi.getRecommendationsByAnalysisId(selectedScanId);
+        const recObj = res.data?.recommendations || res.data?.recommendation || res.recommendations || res.data || res;
+        if (Array.isArray(recObj) && recObj.length > 0) {
+          setRecommendation(recObj);
+          setIsLoading(false);
+          return;
         }
+      }
+
+      // Generate localized AI recommendation via backend for selected language
+      const activeScan = (Array.isArray(scans) ? scans : []).find(
+        (s) => String(s.id || s.analysis_id || s.analysisId) === String(selectedScanId)
+      );
+      const targetFarmId = activeScan?.farm_id || activeScan?.farmId || selectedFarmId;
+      let targetCropId = activeScan?.crop_id || activeScan?.cropId || activeScan?.crop?.cropId;
+
+      if (!targetCropId && selectedScanId) {
+        try {
+          const scanRes = await analysisApi.getAnalysisById(selectedScanId);
+          const scanData = scanRes.data?.analysis || scanRes.data || scanRes;
+          targetCropId = scanData?.crop_id || scanData?.cropId;
+        } catch {
+          // ignore
+        }
+      }
+
+      if (targetCropId) {
+        const genRes = await recommendationsApi.generateRecommendations({
+          farmId: targetFarmId,
+          cropId: targetCropId,
+          diseaseAnalysisId: selectedScanId,
+          language: selectedLanguage,
+        });
+        const gObj = genRes.data?.recommendations || genRes.data?.recommendation || genRes.data || genRes;
+        setRecommendation(gObj);
+      } else {
+        setRecommendation(null);
       }
     } catch (genErr) {
       setError(genErr.response?.data?.message || genErr.message || 'Failed to load recommendations.');
@@ -168,16 +181,29 @@ export default function RecommendationsPage() {
     setSelectedLanguage(newLang);
     if (!selectedScanId) return;
     setIsGenerating(true);
+    setError(null);
     try {
       const activeScan = (Array.isArray(scans) ? scans : []).find(
-        (s) => String(s.id || s.analysis_id) === String(selectedScanId)
+        (s) => String(s.id || s.analysis_id || s.analysisId) === String(selectedScanId)
       );
       const targetFarmId = activeScan?.farm_id || activeScan?.farmId || selectedFarmId;
-      const targetCropId = activeScan?.crop_id || activeScan?.cropId;
+      let targetCropId = activeScan?.crop_id || activeScan?.cropId || activeScan?.crop?.cropId;
+
+      if (!targetCropId && selectedScanId) {
+        try {
+          const scanRes = await analysisApi.getAnalysisById(selectedScanId);
+          const scanData = scanRes.data?.analysis || scanRes.data || scanRes;
+          targetCropId = scanData?.crop_id || scanData?.cropId;
+        } catch {
+          // ignore
+        }
+      }
+
       if (!targetCropId) {
-        showError('No crop ID associated with scan record.');
+        showError('No crop record associated with selected scan.');
         return;
       }
+
       const genRes = await recommendationsApi.generateRecommendations({
         farmId: targetFarmId,
         cropId: targetCropId,
@@ -186,7 +212,8 @@ export default function RecommendationsPage() {
       });
       const gObj = genRes.data?.recommendations || genRes.data?.recommendation || genRes.data || genRes;
       setRecommendation(gObj);
-      showSuccess(`Action plan translated to ${languageOptions.find((l) => l.value === newLang)?.label}`);
+      const langName = languageOptions.find((l) => l.value === newLang)?.label || newLang;
+      showSuccess(`Action plan translated to ${langName}`);
     } catch (err) {
       showError(err.response?.data?.message || err.message || 'Failed to generate recommendations in selected language.');
     } finally {
@@ -261,7 +288,7 @@ export default function RecommendationsPage() {
               label="Select Farm Field"
               value={selectedFarmId}
               onChange={(e) => setSelectedFarmId(e.target.value)}
-              options={(Array.isArray(farms) ? farms : []).map((f) => ({ value: f.id, label: `🌾 ${f.farm_name || f.name}` }))}
+              options={(Array.isArray(farms) ? farms : []).map((f, idx) => ({ value: f.id || `farm-${idx}`, label: `🌾 ${f.farm_name || f.name || 'Unnamed Farm'}` }))}
               placeholder="Choose Farm"
             />
 
@@ -269,8 +296,8 @@ export default function RecommendationsPage() {
               label="Select Disease Scan"
               value={selectedScanId}
               onChange={(e) => setSelectedScanId(e.target.value)}
-              options={(Array.isArray(scans) ? scans : []).map((s) => ({
-                value: s.id || s.analysis_id,
+              options={(Array.isArray(scans) ? scans : []).map((s, idx) => ({
+                value: s.id || s.analysis_id || `scan-${idx}`,
                 label: `🔬 ${s.disease_name || s.diagnosis || 'Scan'} (${new Date(s.created_at || Date.now()).toLocaleDateString()})`,
               }))}
               placeholder="Choose Scan Record"

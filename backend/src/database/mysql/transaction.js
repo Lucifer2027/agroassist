@@ -1,13 +1,7 @@
-const { getPool } = require('./index');
 const { logger } = require('../../utils/logger');
 
-/**
- * Executes a callback function within an isolated MySQL transaction block.
- * Automatically handles BEGIN, COMMIT, and ROLLBACK upon error.
- *
- * @param {Function} callback - Async function receiving (connection) parameter
- */
 const withTransaction = async (callback) => {
+  const { getPool } = require('./index');
   const pool = getPool();
   const connection = await pool.getConnection();
   

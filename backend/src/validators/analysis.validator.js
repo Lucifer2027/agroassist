@@ -53,6 +53,16 @@ const parseAndValidateGeminiResponse = (rawText) => {
       cleanText = cleanText.replace(/^```(json)?/, '').replace(/```$/, '').trim();
     }
     parsed = JSON.parse(cleanText);
+    if (parsed && typeof parsed === 'object') {
+      if (parsed.severity) {
+        const s = String(parsed.severity).toLowerCase();
+        parsed.severity = ['low', 'medium', 'high'].includes(s) ? s : (s === 'critical' ? 'high' : 'medium');
+      }
+      if (parsed.environmentalRiskLevel) {
+        const r = String(parsed.environmentalRiskLevel).toLowerCase();
+        parsed.environmentalRiskLevel = ['low', 'medium', 'high'].includes(r) ? r : (r === 'critical' ? 'high' : 'medium');
+      }
+    }
   } catch (error) {
     logger.error(`Failed to parse Gemini JSON output: ${error.message}. Raw text: ${rawText}`);
     throw new GeminiError('Malformed AI response output. Invalid JSON returned.', 'AI_ANALYSIS_ERROR', 422);

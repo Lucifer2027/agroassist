@@ -9,9 +9,26 @@ const genAI = new GoogleGenerativeAI(geminiConfig.apiKey);
 /**
  * Fetches image from URL and converts to base64 inline data format for Gemini API
  */
-const fetchImageAsInlineData = async (imageUrl, timeoutMs = 10000) => {
-  try {
-    const response = await axios.get(imageUrl, {
+const fetchImageAsInlineData = async (imageUrl, fallbackUrl = null, timeoutMs = 10000) => {
+  if (!imageUrl) {
+    throw ApiError.badRequest('Image URL is missing or invalid', 'IMAGE_URL_MISSING');
+  }
+
+  // Handle Base64 Data URIs directly
+  if (typeof imageUrl === 'string' && imageUrl.startsWith('data:')) {
+    const matches = imageUrl.match(/^data:(image\/[a-zA-Z+]+);base64,(.+)$/);
+    if (matches) {
+      return {
+        inlineData: {
+          mimeType: matches[1],
+          data: matches[2]
+        }
+      };
+    }
+  }
+
+  const tryDownload = async (url) => {
+    const response = await axios.get(url, {
       responseType: 'arraybuffer',
       timeout: timeoutMs,
       headers: { Accept: 'image/*' }
@@ -23,21 +40,35 @@ const fetchImageAsInlineData = async (imageUrl, timeoutMs = 10000) => {
     return {
       inlineData: {
         data: base64Data,
-        mimeType: contentType
+        mimeType: contentType.split(';')[0]
       }
     };
-  } catch (error) {
-    logger.error(`Failed to download image from Cloudinary URL: ${error.message}`);
-    throw ApiError.badRequest('Unable to fetch image from Cloudinary for AI analysis', 'IMAGE_FETCH_FAILED');
+  };
+
+  try {
+    return await tryDownload(imageUrl);
+  } catch (primaryErr) {
+    logger.warn(`Failed to download primary image URL (${imageUrl}): ${primaryErr.message}`);
+
+    if (fallbackUrl && fallbackUrl !== imageUrl) {
+      logger.info(`Attempting fallback image URL (${fallbackUrl})...`);
+      try {
+        return await tryDownload(fallbackUrl);
+      } catch (fallbackErr) {
+        logger.error(`Fallback image URL also failed: ${fallbackErr.message}`);
+      }
+    }
+
+    throw ApiError.badRequest(`Unable to fetch image from Cloudinary for AI analysis: ${primaryErr.message}`, 'IMAGE_FETCH_FAILED');
   }
 };
 
 /**
  * Executes Gemini generative content call with timeout and max retries
  */
-const analyzeLeafImageWithGemini = async (imageUrl, cropContext, maxRetries = 2, timeoutMs = 25000) => {
+const analyzeLeafImageWithGemini = async (imageUrl, cropContext, fallbackUrl = null, maxRetries = 2, timeoutMs = 25000) => {
   const model = genAI.getGenerativeModel({
-    model: geminiConfig.modelName || 'gemini-1.5-flash',
+    model: geminiConfig.modelName || 'gemini-3-flash-preview',
     generationConfig: {
       responseMimeType: 'application/json',
       temperature: 0.2
@@ -73,6 +104,14 @@ Rules:
 5. Return ONLY the JSON object. Do not include markdown code block syntax or extra text outside JSON.
 `;
 
+  // Fetch image data prior to retry loop so 404 download errors fail immediately without wasting API retry iterations
+  let imageInlineData;
+  try {
+    imageInlineData = await fetchImageAsInlineData(imageUrl, fallbackUrl);
+  } catch (fetchErr) {
+    throw fetchErr;
+  }
+
   let attempt = 0;
   let lastError = null;
 
@@ -80,8 +119,6 @@ Rules:
     attempt++;
     try {
       logger.info(`Sending image analysis request to Gemini AI (Attempt ${attempt}/${maxRetries + 1})...`);
-      
-      const imageInlineData = await fetchImageAsInlineData(imageUrl);
 
       // Execute request with Promise timeout wrapper
       const responsePromise = model.generateContent([prompt, imageInlineData]);

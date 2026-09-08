@@ -37,11 +37,14 @@ export const Select = forwardRef(function Select(
             {placeholder}
           </option>
         )}
-        {options.map((opt) => {
-          const val = typeof opt === 'object' ? opt.value : opt;
-          const lbl = typeof opt === 'object' ? opt.label : opt;
+        {options.map((opt, idx) => {
+          const val = typeof opt === 'object' ? opt?.value : opt;
+          const lbl = typeof opt === 'object' ? opt?.label : opt;
+          const optionKey = val !== undefined && val !== null && String(val).trim() !== '' 
+            ? `${val}-${idx}` 
+            : `option-${idx}`;
           return (
-            <option key={val} value={val} className="bg-slate-900 text-slate-100">
+            <option key={optionKey} value={val ?? ''} className="bg-slate-900 text-slate-100">
               {lbl}
             </option>
           );

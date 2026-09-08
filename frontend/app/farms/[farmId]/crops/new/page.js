@@ -22,8 +22,8 @@ export default function CreateCropPage({ params: paramsPromise }) {
 
   const [formData, setFormData] = useState({
     name: '',
-    crop_type: 'Tomato',
-    variety: 'Roma VF',
+    crop_type: 'Fungi / Mycelium Culture',
+    variety: 'Oyster Mushroom / Fungi Culture',
     planting_date: new Date().toISOString().split('T')[0],
     acreage_hectares: '',
     status: 'active',
@@ -123,12 +123,24 @@ export default function CreateCropPage({ params: paramsPromise }) {
                 name="crop_type"
                 value={formData.crop_type}
                 onChange={handleChange}
-                options={['Tomato', 'Maize', 'Apple', 'Wheat', 'Potato', 'Grape', 'Rice', 'Soybean', 'Cotton']}
+                options={[
+                  'Tomato',
+                  'Fungi / Mycelium Culture',
+                  'Mushroom (Button / Oyster / Shiitake)',
+                  'Maize',
+                  'Apple',
+                  'Wheat',
+                  'Potato',
+                  'Grape',
+                  'Rice',
+                  'Soybean',
+                  'Cotton'
+                ]}
               />
               <Input
                 label="Variety / Hybrid"
                 name="variety"
-                placeholder="e.g. Roma VF / Hybrid 302"
+                placeholder="e.g. Oyster Mushroom / Fungi Culture"
                 value={formData.variety}
                 onChange={handleChange}
               />

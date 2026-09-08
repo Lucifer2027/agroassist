@@ -5,12 +5,11 @@ const ApiError = require('../utils/apiError');
 const { env } = require('../config/env.config');
 
 /**
- * General API Rate Limiter
- * 100 requests per 15 minutes per IP (disabled or relaxed during unit testing)
+ * General API Rate Limiter (IP blocking disabled via 1,000,000 max capacity)
  */
 const generalRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: process.env.NODE_ENV === 'test' ? 10000 : 100,
+  max: 1000000,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
@@ -21,12 +20,11 @@ const generalRateLimiter = rateLimit({
 });
 
 /**
- * Strict Rate Limiter for compute/AI/PDF intensive endpoints
- * 15 requests per 15 minutes per IP
+ * Strict Rate Limiter for compute/AI/PDF intensive endpoints (IP blocking disabled via 1,000,000 max capacity)
  */
 const strictRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: process.env.NODE_ENV === 'test' ? 10000 : 15,
+  max: 1000000,
   standardHeaders: true,
   legacyHeaders: false,
   message: {

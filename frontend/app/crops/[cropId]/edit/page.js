@@ -168,12 +168,24 @@ export default function EditCropPage({ params: paramsPromise }) {
                 name="crop_type"
                 value={formData.crop_type}
                 onChange={handleChange}
-                options={['Tomato', 'Maize', 'Apple', 'Wheat', 'Potato', 'Grape', 'Rice', 'Soybean', 'Cotton']}
+                options={[
+                  'Tomato',
+                  'Fungi / Mycelium Culture',
+                  'Mushroom (Button / Oyster / Shiitake)',
+                  'Maize',
+                  'Apple',
+                  'Wheat',
+                  'Potato',
+                  'Grape',
+                  'Rice',
+                  'Soybean',
+                  'Cotton'
+                ]}
               />
               <Input
                 label="Variety / Hybrid"
                 name="variety"
-                placeholder="e.g. Roma VF"
+                placeholder="e.g. Oyster Mushroom / Fungi Culture"
                 value={formData.variety}
                 onChange={handleChange}
               />

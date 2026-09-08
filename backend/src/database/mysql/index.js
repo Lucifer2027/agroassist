@@ -2,7 +2,6 @@ const mysql = require('mysql2/promise');
 const mysqlConfig = require('../../config/mysql.config');
 const { logger } = require('../../utils/logger');
 const { DatabaseError } = require('../../utils/apiError');
-const { withTransaction } = require('./transaction');
 
 let pool = null;
 
@@ -35,6 +34,32 @@ const query = async (sql, params = [], customConn = null) => {
     dbError.errno = error.errno;
     dbError.sqlState = error.sqlState;
     throw dbError;
+  }
+};
+
+/**
+ * Executes a callback function within an isolated MySQL transaction block.
+ * Automatically handles BEGIN, COMMIT, and ROLLBACK upon error.
+ *
+ * @param {Function} callback - Async function receiving (connection) parameter
+ */
+const withTransaction = async (callback) => {
+  const pool = getPool();
+  const connection = await pool.getConnection();
+
+  try {
+    await connection.beginTransaction();
+
+    const result = await callback(connection);
+
+    await connection.commit();
+    return result;
+  } catch (error) {
+    await connection.rollback();
+    logger.error(`Transaction rolled back due to error: ${error.message}`);
+    throw error;
+  } finally {
+    connection.release();
   }
 };
 

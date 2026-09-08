@@ -8,6 +8,15 @@ const { query: mysqlQuery } = require('../database/mysql');
 const ApiError = require('../utils/apiError');
 const { logger } = require('../utils/logger');
 
+const normalizeKeys = (row) => {
+  if (!row || typeof row !== 'object') return row;
+  const normalized = {};
+  for (const [k, v] of Object.entries(row)) {
+    normalized[k.toLowerCase()] = v;
+  }
+  return normalized;
+};
+
 class SnowflakeAnalyticsService {
   /**
    * Asynchronous, Non-Blocking Idempotent Synchronizer: Loads validated MySQL records into Snowflake.
@@ -29,9 +38,25 @@ class SnowflakeAnalyticsService {
             `;
             const symptomsCount = Array.isArray(payload.symptoms) ? payload.symptoms.length : 0;
             await executeQuery(sql, [
-              payload.id, payload.user_id, payload.farm_id, payload.crop_id, payload.cloudinary_asset_id || null,
+              String(payload.id), String(payload.user_id), String(payload.farm_id), String(payload.crop_id),
+              payload.cloudinary_asset_id ? String(payload.cloudinary_asset_id) : null,
               payload.disease_name, payload.confidence_score, payload.severity, payload.environmental_risk_level, symptomsCount
             ]);
+
+            // Sync entity dimensions to CORE.DIM_FARMER_FARM_CROP
+            try {
+              const dimKey = `${payload.user_id}_${payload.farm_id}_${payload.crop_id}`;
+              const dimSql = `
+                MERGE INTO CORE.DIM_FARMER_FARM_CROP target
+                USING (SELECT ? AS dim_key, ? AS user_id, ? AS farm_id, ? AS crop_id) src
+                ON target.dim_key = src.dim_key
+                WHEN NOT MATCHED THEN
+                  INSERT (dim_key, user_id, farm_id, crop_id) VALUES (src.dim_key, src.user_id, src.farm_id, src.crop_id)
+              `;
+              await executeQuery(dimSql, [dimKey, String(payload.user_id), String(payload.farm_id), String(payload.crop_id)]);
+            } catch (dimErr) {
+              logger.warn(`Snowflake dimension sync warning: ${dimErr.message}`);
+            }
             break;
           }
 
@@ -43,7 +68,7 @@ class SnowflakeAnalyticsService {
               ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `;
             await executeQuery(sql, [
-              payload.id, payload.farm_id, payload.latitude || null, payload.longitude || null,
+              String(payload.id), String(payload.farm_id), payload.latitude || null, payload.longitude || null,
               payload.temperature || null, payload.humidity || null, payload.rainfall || 0,
               payload.wind_speed || null, payload.weather_condition || null, payload.rain_probability || null
             ]);
@@ -57,7 +82,8 @@ class SnowflakeAnalyticsService {
               ) VALUES (?, ?, ?, ?, ?, ?)
             `;
             await executeQuery(sql, [
-              payload.id, payload.farm_id, payload.crop_id, payload.disease_analysis_id || null,
+              String(payload.id), String(payload.farm_id), String(payload.crop_id),
+              payload.disease_analysis_id ? String(payload.disease_analysis_id) : null,
               payload.risk_score, payload.risk_level
             ]);
             break;
@@ -83,8 +109,8 @@ class SnowflakeAnalyticsService {
 
     try {
       const sql = `SELECT * FROM ANALYTICS.FARM_ANALYTICS WHERE farm_id = ?`;
-      const rows = await executeQuery(sql, [farmId]);
-      if (rows && rows.length) return rows[0];
+      const rows = await executeQuery(sql, [String(farmId)]);
+      if (rows && rows.length) return normalizeKeys(rows[0]);
     } catch (err) {
       logger.warn(`Snowflake analytics query fallback to MySQL: ${err.message}`);
     }
@@ -111,8 +137,8 @@ class SnowflakeAnalyticsService {
 
     try {
       const sql = `SELECT * FROM ANALYTICS.DISEASE_TRENDS WHERE farm_id = ?`;
-      const rows = await executeQuery(sql, [farmId]);
-      if (rows && rows.length) return rows;
+      const rows = await executeQuery(sql, [String(farmId)]);
+      if (rows && rows.length) return rows.map(normalizeKeys);
     } catch (err) {
       logger.warn(`Snowflake disease trends fallback to MySQL: ${err.message}`);
     }
@@ -142,23 +168,24 @@ class SnowflakeAnalyticsService {
 
     try {
       const sql = `SELECT * FROM ANALYTICS.RISK_EVOLUTION WHERE farm_id = ?`;
-      const rows = await executeQuery(sql, [farmId]);
-      if (rows && rows.length) return rows;
+      const rows = await executeQuery(sql, [String(farmId)]);
+      if (rows && rows.length) return rows.map(normalizeKeys);
     } catch (err) {
       logger.warn(`Snowflake risk evolution fallback to MySQL: ${err.message}`);
     }
 
     const mysqlSql = `
       SELECT 
+        id,
         farm_id,
         crop_id,
-        AVG(risk_score) AS avg_risk_score,
-        MAX(risk_score) AS max_risk_score,
-        COUNT(id) AS total_assessments,
-        MAX(calculated_at) AS latest_assessment
+        risk_score,
+        risk_level,
+        calculated_at AS date,
+        calculated_at
       FROM crop_risk_records
       WHERE farm_id = ?
-      GROUP BY farm_id, crop_id
+      ORDER BY calculated_at ASC
     `;
     return mysqlQuery(mysqlSql, [farmId]);
   }
@@ -171,8 +198,8 @@ class SnowflakeAnalyticsService {
 
     try {
       const sql = `SELECT * FROM ANALYTICS.WEATHER_DISEASE_CORRELATION WHERE farm_id = ?`;
-      const rows = await executeQuery(sql, [farmId]);
-      if (rows && rows.length) return rows[0];
+      const rows = await executeQuery(sql, [String(farmId)]);
+      if (rows && rows.length) return normalizeKeys(rows[0]);
     } catch (err) {
       logger.warn(`Snowflake weather-disease correlation fallback to MySQL: ${err.message}`);
     }

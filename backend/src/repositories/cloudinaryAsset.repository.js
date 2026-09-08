@@ -16,6 +16,16 @@ class CloudinaryAssetRepository {
       format = null
     } = assetData;
 
+    const parseId = (val) => {
+      if (val === null || val === undefined || val === 'null' || val === 'undefined') return null;
+      const num = Number(val);
+      return !isNaN(num) && num > 0 ? num : null;
+    };
+
+    const safeUserId = parseId(user_id);
+    const safeFarmId = parseId(farm_id);
+    const safeCropId = parseId(crop_id);
+
     const sql = `
       INSERT INTO cloudinary_assets (
         user_id, farm_id, crop_id, public_id, resource_type,
@@ -24,7 +34,7 @@ class CloudinaryAssetRepository {
     `;
 
     const params = [
-      user_id, farm_id, crop_id, public_id, resource_type,
+      safeUserId, safeFarmId, safeCropId, public_id, resource_type,
       original_url, optimized_url, annotated_url, width, height, format
     ];
 

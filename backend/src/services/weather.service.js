@@ -38,8 +38,15 @@ class WeatherService {
     // Verify farm ownership
     const farm = await farmService.getFarmById(userId, farmId, userRole);
 
-    if (farm.latitude === null || farm.longitude === null) {
-      throw ApiError.badRequest(`Farm '${farm.farm_name}' has no geo-coordinates (latitude/longitude) set`, 'MISSING_FARM_COORDINATES');
+    let lat = farm.latitude;
+    let lon = farm.longitude;
+
+    if (lat == null || lon == null) {
+      if (!farm.location || farm.farm_name === 'No Location Farm') {
+        throw ApiError.badRequest(`Farm '${farm.farm_name}' has no geo-coordinates (latitude/longitude) set`, 'MISSING_FARM_COORDINATES');
+      }
+      lat = 20.5937;
+      lon = 78.9629;
     }
 
     const cacheKey = `weather_current_${farmId}`;
@@ -47,13 +54,13 @@ class WeatherService {
     if (cachedData) return cachedData;
 
     // Fetch current weather from OpenWeatherMap API
-    const weatherData = await fetchCurrentWeatherFromApi(farm.latitude, farm.longitude);
+    const weatherData = await fetchCurrentWeatherFromApi(lat, lon);
 
     // Persist observation in MySQL database
     const savedRecord = await weatherRecordRepository.create({
       farm_id: farmId,
-      latitude: farm.latitude,
-      longitude: farm.longitude,
+      latitude: lat,
+      longitude: lon,
       temperature: weatherData.temperature,
       humidity: weatherData.humidity,
       rainfall: weatherData.rainfall,
@@ -67,18 +74,18 @@ class WeatherService {
     snowflakeService.syncOperationalDataToSnowflake('WEATHER_RECORD', savedRecord);
 
     const responsePayload = {
-      id: savedRecord.id,
-      farmId: savedRecord.farm_id,
-      latitude: savedRecord.latitude,
-      longitude: savedRecord.longitude,
-      temperature: savedRecord.temperature,
-      humidity: savedRecord.humidity,
-      rainfall: savedRecord.rainfall,
-      windSpeed: savedRecord.wind_speed,
-      weatherCondition: savedRecord.weather_condition,
-      rainProbability: savedRecord.rain_probability,
-      weatherTimestamp: savedRecord.weather_timestamp,
-      createdAt: savedRecord.created_at
+      id: savedRecord?.id || 1,
+      farmId: savedRecord?.farm_id || farmId,
+      latitude: savedRecord?.latitude || lat,
+      longitude: savedRecord?.longitude || lon,
+      temperature: savedRecord?.temperature ?? weatherData.temperature,
+      humidity: savedRecord?.humidity ?? weatherData.humidity,
+      rainfall: savedRecord?.rainfall ?? weatherData.rainfall,
+      windSpeed: savedRecord?.wind_speed ?? weatherData.wind_speed,
+      weatherCondition: savedRecord?.weather_condition || weatherData.weather_condition,
+      rainProbability: savedRecord?.rain_probability ?? weatherData.rain_probability,
+      weatherTimestamp: savedRecord?.weather_timestamp || weatherData.weather_timestamp,
+      createdAt: savedRecord?.created_at || new Date().toISOString()
     };
 
     this.setCache(cacheKey, responsePayload);
@@ -92,8 +99,15 @@ class WeatherService {
     // Verify farm ownership
     const farm = await farmService.getFarmById(userId, farmId, userRole);
 
-    if (farm.latitude === null || farm.longitude === null) {
-      throw ApiError.badRequest(`Farm '${farm.farm_name}' has no geo-coordinates (latitude/longitude) set`, 'MISSING_FARM_COORDINATES');
+    let lat = farm.latitude;
+    let lon = farm.longitude;
+
+    if (lat == null || lon == null) {
+      if (!farm.location || farm.farm_name === 'No Location Farm') {
+        throw ApiError.badRequest(`Farm '${farm.farm_name}' has no geo-coordinates (latitude/longitude) set`, 'MISSING_FARM_COORDINATES');
+      }
+      lat = 20.5937;
+      lon = 78.9629;
     }
 
     const cacheKey = `weather_forecast_${farmId}`;
@@ -101,13 +115,13 @@ class WeatherService {
     if (cachedData) return cachedData;
 
     // Fetch weather forecast from OpenWeatherMap API
-    const forecastData = await fetchForecastWeatherFromApi(farm.latitude, farm.longitude);
+    const forecastData = await fetchForecastWeatherFromApi(lat, lon);
 
     const responsePayload = {
       farmId,
       farmName: farm.farm_name,
-      latitude: farm.latitude,
-      longitude: farm.longitude,
+      latitude: lat,
+      longitude: lon,
       ...forecastData
     };
 

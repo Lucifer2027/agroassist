@@ -1,5 +1,12 @@
 const { query } = require('../database/mysql');
 
+const formatSqlDatetime = (val) => {
+  if (!val) return new Date();
+  if (val instanceof Date) return val;
+  const d = new Date(val);
+  return !isNaN(d.getTime()) ? d : new Date();
+};
+
 class WeatherRecordRepository {
   async create(weatherData, conn = null) {
     const {
@@ -15,6 +22,8 @@ class WeatherRecordRepository {
       weather_timestamp = new Date()
     } = weatherData;
 
+    const safeTimestamp = formatSqlDatetime(weather_timestamp);
+
     const sql = `
       INSERT INTO weather_records (
         farm_id, latitude, longitude, temperature, humidity,
@@ -24,7 +33,7 @@ class WeatherRecordRepository {
 
     const params = [
       farm_id, latitude, longitude, temperature, humidity,
-      rainfall, wind_speed, weather_condition, rain_probability, weather_timestamp
+      rainfall, wind_speed, weather_condition, rain_probability, safeTimestamp
     ];
 
     const result = await query(sql, params, conn);

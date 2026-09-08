@@ -429,7 +429,19 @@ export default function FarmDetailPage({ params: paramsPromise }) {
                 label="Crop Type"
                 value={cropForm.crop_type}
                 onChange={(e) => setCropForm({ ...cropForm, crop_type: e.target.value })}
-                options={['Tomato', 'Maize', 'Apple', 'Wheat', 'Potato', 'Grape', 'Rice', 'Soybean', 'Cotton']}
+                options={[
+                  'Tomato',
+                  'Fungi / Mycelium Culture',
+                  'Mushroom (Button / Oyster / Shiitake)',
+                  'Maize',
+                  'Apple',
+                  'Wheat',
+                  'Potato',
+                  'Grape',
+                  'Rice',
+                  'Soybean',
+                  'Cotton'
+                ]}
               />
               <Input
                 label="Variety / Hybrid"

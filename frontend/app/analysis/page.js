@@ -36,10 +36,22 @@ import {
 // Preset sample leaf images for instant user testing
 const sampleLeaves = [
   {
-    title: 'Tomato Late Blight',
+    title: 'Tomato Light Blight (Late Blight)',
     crop_type: 'Tomato',
-    url: 'https://images.unsplash.com/photo-1592417817098-8f3d6eb1626d?auto=format&fit=crop&w=800&q=80',
-    description: 'Dark water-soaked lesions on leaf margins with white fungal sporulation.',
+    url: 'https://images.unsplash.com/photo-1592841200221-a6898f307baa?auto=format&fit=crop&w=800&q=80',
+    description: 'Light to dark water-soaked lesions on leaf margins with white fungal sporulation.',
+  },
+  {
+    title: 'Tomato Light Blight (Early Blight)',
+    crop_type: 'Tomato',
+    url: 'https://images.unsplash.com/photo-1560493676-04071c5f467b?auto=format&fit=crop&w=800&q=80',
+    description: 'Concentric target spot lesions on foliage with chlorotic leaf margins.',
+  },
+  {
+    title: 'Oyster Mushroom Green Mold',
+    crop_type: 'Mushroom (Oyster)',
+    url: 'https://images.unsplash.com/photo-1504470695779-75300268aa0e?auto=format&fit=crop&w=800&q=80',
+    description: 'Trichoderma green mold infection on mushroom fruiting substrate.',
   },
   {
     title: 'Maize Common Rust',
@@ -54,7 +66,7 @@ const sampleLeaves = [
     description: 'Olive-green to brown velvety spots on apple leaves and fruit.',
   },
   {
-    title: 'Healthy Leaf Sample',
+    title: 'Healthy Tomato Leaf',
     crop_type: 'Tomato',
     url: 'https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?auto=format&fit=crop&w=800&q=80',
     description: 'Vibrant green tissue with zero necrotic lesions or pathogen rust.',
@@ -229,7 +241,19 @@ function DiseaseScannerContent() {
       // Step 2: Register Metadata
       setUploadStage('optimizing');
       setProgressMessage('Registering Cloudinary asset metadata in MySQL operational DB...');
-      const imageUrlToUse = previewUrl || 'https://images.unsplash.com/photo-1592417817098-8f3d6eb1626d?auto=format&fit=crop&w=800&q=80';
+      
+      let imageUrlToUse;
+      if (selectedFile) {
+        imageUrlToUse = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(selectedFile);
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = (err) => reject(err);
+        });
+      } else {
+        imageUrlToUse = previewUrl || 'https://images.unsplash.com/photo-1592417817098-8f3d6eb1626d?auto=format&fit=crop&w=800&q=80';
+      }
+
       const metaRes = await uploadsApi.registerMetadata({
         farm_id: selectedFarmId,
         crop_id: selectedCropId,
@@ -404,7 +428,14 @@ function DiseaseScannerContent() {
                       : 'border-slate-800 hover:border-slate-700 bg-slate-900/60'
                   }`}
                 >
-                  <img src={sample.url} alt={sample.title} className="w-12 h-12 rounded-lg object-cover border border-slate-800 shrink-0" />
+                  <img
+                    src={sample.url}
+                    alt={sample.title}
+                    onError={(e) => {
+                      e.currentTarget.src = 'https://images.unsplash.com/photo-1592841200221-a6898f307baa?auto=format&fit=crop&w=800&q=80';
+                    }}
+                    className="w-12 h-12 rounded-lg object-cover border border-slate-800 shrink-0"
+                  />
                   <div className="flex-1 min-w-0">
                     <h4 className="text-xs font-semibold text-slate-200 truncate">{sample.title}</h4>
                     <p className="text-[11px] text-slate-400 truncate">{sample.description}</p>

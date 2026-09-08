@@ -55,6 +55,11 @@ export default function AnalysisDetailPage({ params: paramsPromise }) {
   ];
 
   const loadScanDetails = useCallback(async () => {
+    if (!analysisId || analysisId === 'undefined') {
+      setError('Invalid or unspecified disease analysis ID.');
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
     setError(null);
     setProcessingStage(0);

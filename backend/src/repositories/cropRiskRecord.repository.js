@@ -19,6 +19,21 @@ class CropRiskRecordRepository {
       risk_factors = []
     } = riskData;
 
+    const parseId = (val) => {
+      if (val === null || val === undefined || val === 'null' || val === 'undefined') return null;
+      const num = Number(val);
+      return !isNaN(num) && num > 0 ? num : null;
+    };
+
+    const safeFarmId = parseId(farm_id);
+    const safeCropId = parseId(crop_id);
+    const safeAnalysisId = parseId(disease_analysis_id);
+
+    let validLevel = (risk_level || 'medium').toString().toLowerCase();
+    if (!['low', 'medium', 'high', 'critical'].includes(validLevel)) {
+      validLevel = 'medium';
+    }
+
     const sql = `
       INSERT INTO crop_risk_records (
         farm_id, crop_id, disease_analysis_id, risk_score, risk_level, risk_factors
@@ -26,7 +41,7 @@ class CropRiskRecordRepository {
     `;
 
     const params = [
-      farm_id, crop_id, disease_analysis_id, risk_score, risk_level, JSON.stringify(risk_factors)
+      safeFarmId, safeCropId, safeAnalysisId, Number(risk_score) || 0, validLevel, JSON.stringify(risk_factors)
     ];
 
     const result = await query(sql, params, conn);
