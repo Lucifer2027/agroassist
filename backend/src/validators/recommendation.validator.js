@@ -2,12 +2,23 @@ const Joi = require('joi');
 const ApiError = require('../utils/apiError');
 const { logger } = require('../utils/logger');
 
+const idSchema = Joi.alternatives().try(
+  Joi.number().integer().positive(),
+  Joi.string().trim().min(1)
+);
+
 const createRecommendationRequestSchema = Joi.object({
-  farmId: Joi.string().uuid().required(),
-  cropId: Joi.string().uuid().required(),
-  diseaseAnalysisId: Joi.string().uuid().required(),
+  farmId: idSchema,
+  farm_id: idSchema,
+  cropId: idSchema,
+  crop_id: idSchema,
+  diseaseAnalysisId: idSchema,
+  disease_analysis_id: idSchema,
   language: Joi.string().valid('en', 'hi', 'pa', 'ta', 'te', 'bn').default('en')
-});
+})
+.or('farmId', 'farm_id')
+.or('cropId', 'crop_id')
+.or('diseaseAnalysisId', 'disease_analysis_id');
 
 const geminiRecommendationSchema = Joi.object({
   recommendations: Joi.array().items(Joi.string().trim()).min(1).required(),

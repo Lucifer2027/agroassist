@@ -32,7 +32,7 @@ class CropRepository {
     ];
 
     const result = await query(sql, params, conn);
-    const cropId = result?.insertId || cropData?.id;
+    const cropId = result?.insertId;
     return this.findById(cropId, conn);
   }
 

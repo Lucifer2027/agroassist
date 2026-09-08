@@ -29,7 +29,7 @@ class CloudinaryAssetRepository {
     ];
 
     const result = await query(sql, params, conn);
-    const assetId = result?.insertId || assetData?.id;
+    const assetId = result?.insertId;
     return this.findById(assetId, conn);
   }
 

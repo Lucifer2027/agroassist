@@ -6,7 +6,16 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "test": "jest --runInBand --detectOpenHandles --forceExit"
+    "test": "jest --runInBand --detectOpenHandles --forceExit",
+    "db:migrate:mysql": "node src/database/mysql/migrate.js",
+    "db:status:mysql": "node src/database/mysql/status.js",
+    "db:verify:mysql": "node src/database/mysql/verify.js",
+    "db:migrate:snowflake": "node src/database/snowflake/migrate.js",
+    "db:status:snowflake": "node src/database/snowflake/status.js",
+    "db:verify:snowflake": "node src/database/snowflake/verify.js",
+    "db:migrate": "node src/database/migrateAll.js",
+    "db:status": "node src/database/statusAll.js",
+    "db:verify": "node src/database/verifyAll.js"
   },
   "keywords": [
     "agroassist",

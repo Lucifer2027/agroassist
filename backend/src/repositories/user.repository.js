@@ -41,7 +41,7 @@ class UserRepository {
     }
 
     const result = await query(sql, params, conn);
-    const userId = result?.insertId || userData?.id;
+    const userId = result?.insertId;
     return this.findById(userId, conn);
   }
 

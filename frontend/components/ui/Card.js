@@ -1,14 +1,23 @@
 import React from 'react';
 
-export function Card({ children, className = '', glow = false, onClick, ...props }) {
+export function Card({
+  children,
+  className = '',
+  glow = false,
+  hover = false,
+  onClick,
+  ...props
+}) {
+  const hoverStyles =
+    hover || onClick
+      ? 'hover:border-emerald-500/40 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-emerald-950/20 transition-all duration-200'
+      : '';
+  const clickStyles = onClick ? 'cursor-pointer active:translate-y-0' : '';
+
   return (
     <div
       onClick={onClick}
-      className={`${glow ? 'glass-panel-glow' : 'glass-panel'} rounded-xl p-5 ${
-        onClick
-          ? 'cursor-pointer hover:border-emerald-500/40 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-emerald-950/20 active:translate-y-0 transition-all duration-200'
-          : ''
-      } ${className}`}
+      className={`${glow ? 'glass-panel-glow' : 'glass-panel'} rounded-xl p-5 ${hoverStyles} ${clickStyles} ${className}`}
       {...props}
     >
       {children}

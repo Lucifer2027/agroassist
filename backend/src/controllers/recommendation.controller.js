@@ -3,7 +3,10 @@ const { sendSuccess } = require('../utils/apiResponse');
 
 const generateRecommendations = async (req, res, next) => {
   try {
-    const { farmId, cropId, diseaseAnalysisId, language } = req.body;
+    const farmId = req.body.farmId || req.body.farm_id;
+    const cropId = req.body.cropId || req.body.crop_id;
+    const diseaseAnalysisId = req.body.diseaseAnalysisId || req.body.disease_analysis_id;
+    const language = req.body.language || 'en';
     const result = await recommendationService.generateRecommendations(
       req.user.id, farmId, cropId, diseaseAnalysisId, language, req.user.role
     );

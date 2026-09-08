@@ -28,7 +28,7 @@ class WeatherRecordRepository {
     ];
 
     const result = await query(sql, params, conn);
-    const recordId = result?.insertId || weatherData?.id;
+    const recordId = result?.insertId;
     return this.findById(recordId, conn);
   }
 

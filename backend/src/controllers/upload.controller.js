@@ -3,7 +3,8 @@ const { sendSuccess } = require('../utils/apiResponse');
 
 const generateUploadSignature = async (req, res, next) => {
   try {
-    const { farmId, cropId } = req.body;
+    const farmId = req.body.farmId || req.body.farm_id;
+    const cropId = req.body.cropId || req.body.crop_id;
     const signatureData = await cloudinaryService.generateUploadSignature(req.user.id, farmId, cropId, req.user.role);
     return sendSuccess(res, 200, 'Cloudinary upload signature generated successfully', signatureData);
   } catch (error) {

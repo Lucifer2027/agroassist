@@ -85,8 +85,9 @@ function DiseaseScannerContent() {
   const [analysisResult, setAnalysisResult] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
 
-  // Pre-fill crop from query param if available
-  const initialCropParam = searchParams.get('crop_id');
+  // Pre-fill farm and crop from query params if available
+  const initialCropParam = searchParams.get('crop_id') || searchParams.get('cropId');
+  const initialFarmParam = searchParams.get('farm_id') || searchParams.get('farmId');
 
   // Load farms list on mount
   useEffect(() => {
@@ -104,14 +105,18 @@ function DiseaseScannerContent() {
           : [];
         setFarms(fList);
         if (fList.length > 0) {
-          setSelectedFarmId(fList[0].id);
+          if (initialFarmParam && fList.some((f) => String(f.id) === String(initialFarmParam))) {
+            setSelectedFarmId(initialFarmParam);
+          } else {
+            setSelectedFarmId(fList[0].id);
+          }
         }
       } catch (err) {
         showError('Failed to load farms selection');
       }
     }
     loadFarms();
-  }, []);
+  }, [initialFarmParam]);
 
   // Fetch crops whenever selected farm changes
   useEffect(() => {
@@ -130,7 +135,7 @@ function DiseaseScannerContent() {
           : [];
         setCrops(cList);
         if (cList.length > 0) {
-          if (initialCropParam && cList.some((c) => c.id === initialCropParam)) {
+          if (initialCropParam && cList.some((c) => String(c.id) === String(initialCropParam))) {
             setSelectedCropId(initialCropParam);
           } else {
             setSelectedCropId(cList[0].id);

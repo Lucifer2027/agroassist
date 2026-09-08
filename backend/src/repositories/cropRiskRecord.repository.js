@@ -30,7 +30,7 @@ class CropRiskRecordRepository {
     ];
 
     const result = await query(sql, params, conn);
-    const riskId = result?.insertId || riskData?.id;
+    const riskId = result?.insertId;
     return this.findById(riskId, conn);
   }
 

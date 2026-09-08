@@ -24,7 +24,7 @@ class FarmRepository {
     ];
 
     const result = await query(sql, params, conn);
-    const farmId = result?.insertId || farmData?.id;
+    const farmId = result?.insertId;
     return this.findById(farmId, conn);
   }
 

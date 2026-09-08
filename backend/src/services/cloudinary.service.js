@@ -88,9 +88,9 @@ class CloudinaryService {
    * Stores Cloudinary asset metadata in MySQL transactional database
    */
   async registerAssetMetadata(userId, assetPayload, userRole = 'farmer') {
+    const farm_id = assetPayload.farm_id || assetPayload.farmId || null;
+    const crop_id = assetPayload.crop_id || assetPayload.cropId || null;
     const {
-      farm_id,
-      crop_id,
       public_id,
       original_url,
       resource_type = 'image',

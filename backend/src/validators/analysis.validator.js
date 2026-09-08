@@ -2,11 +2,22 @@ const Joi = require('joi');
 const { ApiError, GeminiError, ValidationError } = require('../utils/apiError');
 const { logger } = require('../utils/logger');
 
+const idSchema = Joi.alternatives().try(
+  Joi.number().integer().positive(),
+  Joi.string().trim().min(1)
+);
+
 const diseaseAnalysisRequestSchema = Joi.object({
-  farmId: Joi.string().uuid().required(),
-  cropId: Joi.string().uuid().required(),
-  cloudinaryAssetId: Joi.string().uuid().required()
-});
+  farmId: idSchema,
+  farm_id: idSchema,
+  cropId: idSchema,
+  crop_id: idSchema,
+  cloudinaryAssetId: idSchema,
+  cloudinary_asset_id: idSchema
+})
+.or('farmId', 'farm_id')
+.or('cropId', 'crop_id')
+.or('cloudinaryAssetId', 'cloudinary_asset_id');
 
 const geminiResponseSchema = Joi.object({
   diseaseName: Joi.string().trim().min(2).max(255).required(),

@@ -22,7 +22,7 @@ class RecommendationRepository {
     ];
 
     const result = await query(sql, params, conn);
-    const recId = result?.insertId || recommendationData?.id;
+    const recId = result?.insertId;
     return this.findById(recId, conn);
   }
 

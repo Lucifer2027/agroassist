@@ -52,7 +52,7 @@ class DiseaseAnalysisRepository {
     ];
 
     const result = await query(sql, params, conn);
-    const analysisId = result?.insertId || analysisData?.id;
+    const analysisId = result?.insertId;
     return this.findById(analysisId, conn);
   }
 
