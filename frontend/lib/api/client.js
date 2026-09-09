@@ -3,7 +3,7 @@
  * Base URL configured via process.env.NEXT_PUBLIC_API_URL
  */
 
-export const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+export const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://agroassist-3h4h.onrender.com/api';
 
 /**
  * Gets stored JWT token from localStorage or cookies

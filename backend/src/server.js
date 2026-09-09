@@ -11,7 +11,7 @@ const server = app.listen(PORT, async () => {
   logger.info(`==================================================`);
   logger.info(` AgroAssist Pro API Backend running on port ${PORT}`);
   logger.info(` Environment: ${env.NODE_ENV}`);
-  logger.info(` Health Check: http://localhost:${PORT}/api/health`);
+  logger.info(` Health Check: https://agroassist-3h4h.onrender.com:${PORT}/api/health`);
   logger.info(`==================================================`);
 
   // Test database connection modules status

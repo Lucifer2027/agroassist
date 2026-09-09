@@ -51,7 +51,7 @@ describe('Phase 15 - Comprehensive Security Hardening Audit', () => {
     it('should set CORS headers for permitted origins', async () => {
       const response = await request(app)
         .get('/api/health')
-        .set('Origin', 'http://localhost:3000');
+        .set('Origin', 'http://localhost:3000', 'https://0a72be35.agroassist-4sv.pages.dev', 'https://agroassist-4sv.pages.dev');
 
       expect(response.headers['access-control-allow-origin']).toBeDefined();
     });
