@@ -95,7 +95,7 @@ export default function FarmCropsListClient() {
                   Back to Farm
                 </Button>
               </Link>
-              <Link href={`/farms/${farmId}/crops/new`}>
+              <Link href={`/farms/crops/new?farmId=${farmId}`}>
                 <Button variant="primary" size="sm" leftIcon={<Plus className="w-4 h-4" />}>
                   Register New Crop
                 </Button>
@@ -178,7 +178,7 @@ export default function FarmCropsListClient() {
             title="No crops added yet."
             description="You have not registered any crop plantings for this farm field yet."
             actionLabel="Add Your First Crop"
-            onAction={() => router.push(`/farms/${farmId}/crops/new`)}
+            onAction={() => router.push(`/farms/crops/new?farmId=${farmId}`)}
           />
         )}
 

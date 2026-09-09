@@ -116,7 +116,7 @@ export default function AllCropsPage() {
           breadcrumbs={['Dashboard', 'Crops']}
           action={
             farms.length > 0 ? (
-              <Link href={`/farms/${selectedFarmId !== 'all' ? selectedFarmId : farms[0].id}/crops/new`}>
+              <Link href={`/farms/crops/new?farmId=${selectedFarmId !== 'all' ? selectedFarmId : farms[0].id}`}>
                 <Button variant="primary" size="sm" leftIcon={<Plus className="w-4 h-4" />}>
                   Add New Crop
                 </Button>
@@ -174,7 +174,7 @@ export default function AllCropsPage() {
             }
             actionLabel="Add Crop"
             onAction={() =>
-              (window.location.href = `/farms/${selectedFarmId !== 'all' ? selectedFarmId : farms[0].id}/crops/new`)
+              (window.location.href = `/farms/crops/new?farmId=${selectedFarmId !== 'all' ? selectedFarmId : farms[0].id}`)
             }
           />
         ) : (
