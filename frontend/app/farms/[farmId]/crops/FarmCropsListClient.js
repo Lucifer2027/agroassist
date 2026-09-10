@@ -90,16 +90,12 @@ export default function FarmCropsListClient() {
           breadcrumbs={['Dashboard', 'Farms', farm?.farm_name || farm?.name || 'Farm', 'Crops']}
           action={
             <div className="flex items-center gap-2">
-              <Link href={`/farms/${farmId}`}>
-                <Button variant="ghost" size="sm" leftIcon={<ArrowLeft className="w-4 h-4" />}>
-                  Back to Farm
-                </Button>
-              </Link>
-              <Link href={`/farms/crops/new?farmId=${farmId}`}>
-                <Button variant="primary" size="sm" leftIcon={<Plus className="w-4 h-4" />}>
-                  Register New Crop
-                </Button>
-              </Link>
+              <Button href={`/farms/${farmId}`} variant="ghost" size="sm" leftIcon={<ArrowLeft className="w-4 h-4" />}>
+                Back to Farm
+              </Button>
+              <Button href={`/farms/crops/new?farmId=${farmId}`} variant="primary" size="sm" leftIcon={<Plus className="w-4 h-4" />}>
+                Register New Crop
+              </Button>
             </div>
           }
         />

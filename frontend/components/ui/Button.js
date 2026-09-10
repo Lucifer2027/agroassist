@@ -1,4 +1,5 @@
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import { Spinner } from './Spinner';
 
 export function Button({
@@ -12,8 +13,25 @@ export function Button({
   className = '',
   type = 'button',
   onClick,
+  href,
   ...props
 }) {
+  const router = useRouter();
+
+  const handleClick = (e) => {
+    if (isDisabled || isLoading) {
+      e.preventDefault();
+      return;
+    }
+    if (onClick) {
+      onClick(e);
+    }
+    if (href && !e.defaultPrevented) {
+      e.preventDefault();
+      router.push(href);
+    }
+  };
+
   const baseStyles =
     'inline-flex items-center justify-center font-medium transition-all duration-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-950 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 select-none cursor-pointer';
 
@@ -35,7 +53,7 @@ export function Button({
     <button
       type={type}
       disabled={isDisabled || isLoading}
-      onClick={onClick}
+      onClick={handleClick}
       className={`${baseStyles} ${variants[variant] || variants.primary} ${sizes[size] || sizes.md} ${className}`}
       {...props}
     >
@@ -46,4 +64,5 @@ export function Button({
     </button>
   );
 }
+
 

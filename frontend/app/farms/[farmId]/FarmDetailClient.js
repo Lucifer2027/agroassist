@@ -202,16 +202,12 @@ export default function FarmDetailClient() {
           breadcrumbs={['Dashboard', 'Farms', farm.farm_name || farm.name]}
           action={
             <div className="flex items-center gap-2">
-              <Link href="/farms">
-                <Button variant="ghost" size="sm" leftIcon={<ArrowLeft className="w-4 h-4" />}>
-                  Farms List
-                </Button>
-              </Link>
-              <Link href={`/farms/${farmId}/edit`}>
-                <Button variant="outline" size="sm" leftIcon={<Edit className="w-4 h-4" />}>
-                  Edit Field
-                </Button>
-              </Link>
+              <Button href="/farms" variant="ghost" size="sm" leftIcon={<ArrowLeft className="w-4 h-4" />}>
+                Farms List
+              </Button>
+              <Button href={`/farms/${farmId}/edit`} variant="outline" size="sm" leftIcon={<Edit className="w-4 h-4" />}>
+                Edit Field
+              </Button>
               <Button variant="danger" size="sm" onClick={() => setIsConfirmDeleteOpen(true)} leftIcon={<Trash2 className="w-4 h-4" />}>
                 Delete
               </Button>

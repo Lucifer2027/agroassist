@@ -1,8 +1,7 @@
 'use client';
 
-import React, { useState, Suspense } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
 import { DashboardLayout } from '@/components/layouts/DashboardLayout';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
@@ -11,29 +10,66 @@ import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { ErrorState } from '@/components/ui/ErrorState';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { useToast } from '@/context/ToastContext';
 import { farmsApi } from '@/lib/api/farms';
-import { Sprout, Calendar, Layers, ArrowLeft, Check } from 'lucide-react';
+import { Sprout, Calendar, Layers, ArrowLeft, Check, Tractor } from 'lucide-react';
 
 function CreateCropContent() {
   const searchParams = useSearchParams();
-  const farmId = searchParams.get('farmId');
+  const initialFarmId = searchParams.get('farmId');
   const router = useRouter();
   const { showSuccess, showError } = useToast();
 
+  const [farms, setFarms] = useState([]);
+  const [selectedFarmId, setSelectedFarmId] = useState(initialFarmId && initialFarmId !== 'all' ? initialFarmId : '');
+  const [isLoadingFarms, setIsLoadingFarms] = useState(true);
+
   const [formData, setFormData] = useState({
     name: '',
-    crop_type: 'Fungi / Mycelium Culture',
-    variety: 'Oyster Mushroom / Fungi Culture',
+    crop_type: 'Tomato',
+    variety: 'Roma VF',
     planting_date: new Date().toISOString().split('T')[0],
-    acreage_hectares: '',
+    acreage_hectares: '1.0',
     status: 'active',
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    async function loadFarms() {
+      setIsLoadingFarms(true);
+      try {
+        const res = await farmsApi.getFarms();
+        const farmList = Array.isArray(res.data?.farms)
+          ? res.data.farms
+          : Array.isArray(res.data?.items)
+          ? res.data.items
+          : Array.isArray(res.farms)
+          ? res.farms
+          : Array.isArray(res.data)
+          ? res.data
+          : [];
+        setFarms(farmList);
+
+        if (!selectedFarmId && farmList.length > 0) {
+          setSelectedFarmId(farmList[0].id);
+        } else if (selectedFarmId && farmList.length > 0) {
+          const match = farmList.find((f) => String(f.id) === String(selectedFarmId));
+          if (!match) {
+            setSelectedFarmId(farmList[0].id);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load farms:', err);
+      } finally {
+        setIsLoadingFarms(false);
+      }
+    }
+    loadFarms();
+  }, [selectedFarmId]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -43,6 +79,7 @@ function CreateCropContent() {
 
   const validate = () => {
     const newErrors = {};
+    if (!selectedFarmId) newErrors.farm = 'Please select a farm field';
     if (!formData.name.trim()) newErrors.name = 'Crop identifier name is required';
     if (!formData.planting_date) newErrors.planting_date = 'Sowing / planting date is required';
     if (!formData.acreage_hectares || parseFloat(formData.acreage_hectares) <= 0) {
@@ -55,10 +92,6 @@ function CreateCropContent() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage('');
-    if (!farmId) {
-      setErrorMessage('Farm ID is missing from URL query parameter.');
-      return;
-    }
     if (!validate()) return;
 
     setIsSubmitting(true);
@@ -70,9 +103,9 @@ function CreateCropContent() {
         status: ['active', 'harvested', 'fallow', 'failed'].includes(formData.status) ? formData.status : 'active',
       };
 
-      await farmsApi.addCropToFarm(farmId, payload);
+      await farmsApi.addCropToFarm(selectedFarmId, payload);
       showSuccess(`Crop "${formData.name}" registered successfully!`);
-      router.push(farmId ? `/farms/${farmId}/crops` : '/farms');
+      router.push(`/farms/${selectedFarmId}`);
     } catch (err) {
       const msg = err.message || 'Failed to register crop planting.';
       setErrorMessage(msg);
@@ -82,16 +115,26 @@ function CreateCropContent() {
     }
   };
 
-  if (!farmId) {
+  if (isLoadingFarms) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-6 max-w-3xl mx-auto">
+          <Skeleton variant="card" height="400px" />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (farms.length === 0) {
     return (
       <DashboardLayout>
         <div className="space-y-6 max-w-3xl mx-auto">
           <PageHeader title="Register Crop Planting" breadcrumbs={['Dashboard', 'Farms', 'Crops', 'New Crop']} />
-          <ErrorState
-            title="Missing Farm Identifier"
-            message="No farm ID specified in query parameter. Please select a farm field first."
-            actionLabel="Return to Farms List"
-            onRetry={() => router.push('/farms')}
+          <EmptyState
+            title="No Farms Registered"
+            description="You need to register a farm field before adding crop plantings to your inventory."
+            actionLabel="Register Farm First"
+            onAction={() => router.push('/farms/new')}
           />
         </div>
       </DashboardLayout>
@@ -107,11 +150,9 @@ function CreateCropContent() {
           icon={<Sprout className="w-6 h-6 text-emerald-400" />}
           breadcrumbs={['Dashboard', 'Farms', 'Crops', 'New Crop']}
           action={
-            <Link href={farmId ? `/farms/${farmId}/crops` : '/farms'}>
-              <Button variant="ghost" size="sm" leftIcon={<ArrowLeft className="w-4 h-4" />}>
-                Cancel
-              </Button>
-            </Link>
+            <Button href={selectedFarmId ? `/farms/${selectedFarmId}` : '/farms'} variant="ghost" size="sm" leftIcon={<ArrowLeft className="w-4 h-4" />}>
+              Cancel
+            </Button>
           }
         />
 
@@ -128,10 +169,22 @@ function CreateCropContent() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            <Select
+              label="Target Farm Field"
+              value={selectedFarmId}
+              onChange={(e) => setSelectedFarmId(e.target.value)}
+              options={farms.map((f) => ({
+                value: f.id,
+                label: `🌾 ${f.farm_name || f.name} (${f.location || 'Central Region'})`,
+              }))}
+              error={errors.farm}
+              required
+            />
+
             <Input
               label="Crop Identifier Name"
               name="name"
-              placeholder="e.g. Field Sector B Tomatoes"
+              placeholder="e.g. Sector B Tomatoes"
               value={formData.name}
               onChange={handleChange}
               error={errors.name}
@@ -156,13 +209,13 @@ function CreateCropContent() {
                   'Grape',
                   'Rice',
                   'Soybean',
-                  'Cotton'
+                  'Cotton',
                 ]}
               />
               <Input
                 label="Variety / Hybrid"
                 name="variety"
-                placeholder="e.g. Oyster Mushroom / Fungi Culture"
+                placeholder="e.g. Roma VF"
                 value={formData.variety}
                 onChange={handleChange}
               />
@@ -184,7 +237,7 @@ function CreateCropContent() {
                 name="acreage_hectares"
                 type="number"
                 step="0.1"
-                placeholder="e.g. 1.5"
+                placeholder="e.g. 1.0"
                 value={formData.acreage_hectares}
                 onChange={handleChange}
                 error={errors.acreage_hectares}
@@ -205,11 +258,9 @@ function CreateCropContent() {
             </div>
 
             <div className="pt-4 border-t border-slate-800 flex justify-end gap-3">
-              <Link href={farmId ? `/farms/${farmId}/crops` : '/farms'}>
-                <Button variant="ghost" size="md">
-                  Cancel
-                </Button>
-              </Link>
+              <Button href={selectedFarmId ? `/farms/${selectedFarmId}` : '/farms'} variant="ghost" size="md">
+                Cancel
+              </Button>
               <Button type="submit" variant="primary" size="md" isLoading={isSubmitting} leftIcon={<Check className="w-4 h-4" />}>
                 Register Crop Record
               </Button>

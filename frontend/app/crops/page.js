@@ -116,11 +116,14 @@ export default function AllCropsPage() {
           breadcrumbs={['Dashboard', 'Crops']}
           action={
             farms.length > 0 ? (
-              <Link href={`/farms/crops/new?farmId=${selectedFarmId !== 'all' ? selectedFarmId : farms[0].id}`}>
-                <Button variant="primary" size="sm" leftIcon={<Plus className="w-4 h-4" />}>
-                  Add New Crop
-                </Button>
-              </Link>
+              <Button
+                href={`/farms/crops/new?farmId=${selectedFarmId !== 'all' ? selectedFarmId : farms[0].id}`}
+                variant="primary"
+                size="sm"
+                leftIcon={<Plus className="w-4 h-4" />}
+              >
+                Add New Crop
+              </Button>
             ) : null
           }
         />
@@ -236,24 +239,18 @@ export default function AllCropsPage() {
                   {/* Actions */}
                   <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between gap-2">
                     <div className="flex items-center gap-1.5">
-                      <Link href={`/crops/${crop.id}`}>
-                        <Button variant="outline" size="sm" leftIcon={<Eye className="w-3.5 h-3.5" />}>
-                          Details
-                        </Button>
-                      </Link>
-                      <Link href={`/crops/${crop.id}/edit`}>
-                        <Button variant="ghost" size="sm" leftIcon={<Edit className="w-3.5 h-3.5" />}>
-                          Edit
-                        </Button>
-                      </Link>
+                      <Button href={`/crops/${crop.id}`} variant="outline" size="sm" leftIcon={<Eye className="w-3.5 h-3.5" />}>
+                        Details
+                      </Button>
+                      <Button href={`/crops/${crop.id}/edit`} variant="ghost" size="sm" leftIcon={<Edit className="w-3.5 h-3.5" />}>
+                        Edit
+                      </Button>
                     </div>
 
                     <div className="flex items-center gap-1">
-                      <Link href={`/analysis?farmId=${crop.farmId}&cropId=${crop.id}`}>
-                        <Button variant="primary" size="sm" leftIcon={<Scan className="w-3.5 h-3.5" />}>
-                          Scan
-                        </Button>
-                      </Link>
+                      <Button href={`/analysis?farmId=${crop.farmId}&cropId=${crop.id}`} variant="primary" size="sm" leftIcon={<Scan className="w-3.5 h-3.5" />}>
+                        Scan
+                      </Button>
                       <Button
                         variant="danger"
                         size="sm"

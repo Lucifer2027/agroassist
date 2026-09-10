@@ -107,11 +107,9 @@ export default function FarmsListPage() {
           icon={<Tractor className="w-6 h-6 text-emerald-400" />}
           breadcrumbs={['Dashboard', 'Farms']}
           action={
-            <Link href="/farms/new">
-              <Button variant="primary" leftIcon={<Plus className="w-4 h-4" />}>
-                Register New Farm
-              </Button>
-            </Link>
+            <Button href="/farms/new" variant="primary" leftIcon={<Plus className="w-4 h-4" />}>
+              Register New Farm
+            </Button>
           }
         />
 
@@ -178,18 +176,14 @@ export default function FarmsListPage() {
                   </div>
 
                   <div className="pt-3 border-t border-slate-800 flex items-center justify-between gap-2">
-                    <Link href={`/farms/${farm.id}`}>
-                      <Button size="sm" variant="outline" leftIcon={<Eye className="w-3.5 h-3.5" />}>
-                        View Field
-                      </Button>
-                    </Link>
+                    <Button href={`/farms/${farm.id}`} size="sm" variant="outline" leftIcon={<Eye className="w-3.5 h-3.5" />}>
+                      View Field
+                    </Button>
 
                     <div className="flex items-center gap-1">
-                      <Link href={`/farms/${farm.id}/edit`}>
-                        <Button size="sm" variant="ghost" className="p-1.5 text-slate-400 hover:text-slate-200">
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                      </Link>
+                      <Button href={`/farms/${farm.id}/edit`} size="sm" variant="ghost" className="p-1.5 text-slate-400 hover:text-slate-200">
+                        <Edit className="w-4 h-4" />
+                      </Button>
                       <Button
                         size="sm"
                         variant="ghost"
