@@ -348,11 +348,9 @@ export default function FarmDetailClient() {
                     </div>
 
                     <div className="pt-2 border-t border-slate-800 flex items-center justify-between">
-                      <Link href={`/crops/${crop.id}`}>
-                        <Button size="sm" variant="outline" leftIcon={<Eye className="w-3.5 h-3.5" />}>
-                          View Details
-                        </Button>
-                      </Link>
+                      <Button href={`/crops/${crop.id}`} size="sm" variant="outline" leftIcon={<Eye className="w-3.5 h-3.5" />}>
+                        View Details
+                      </Button>
                       <Button size="sm" variant="ghost" className="text-rose-400 hover:text-rose-300" onClick={() => setCropToDelete(crop)}>
                         <Trash2 className="w-3.5 h-3.5" />
                       </Button>
@@ -391,11 +389,9 @@ export default function FarmDetailClient() {
                     </div>
                     <div className="flex items-center gap-3">
                       <Badge variant={s.severity === 'high' ? 'critical' : 'warning'}>{(s.severity || 'low').toUpperCase()}</Badge>
-                      <Link href={`/analysis/${s.analysisId || s.id || s.analysis_id}`}>
-                        <Button size="sm" variant="ghost" leftIcon={<Eye className="w-3.5 h-3.5" />}>
-                          Inspect
-                        </Button>
-                      </Link>
+                      <Button href={`/analysis/${s.analysisId || s.id || s.analysis_id}`} size="sm" variant="ghost" leftIcon={<Eye className="w-3.5 h-3.5" />}>
+                        Inspect
+                      </Button>
                     </div>
                   </div>
                 ))}

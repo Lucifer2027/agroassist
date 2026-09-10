@@ -1,8 +1,27 @@
 # AgroAssist Pro Cloudflare Pages SPA Routing Rules & Dynamic URL Rewrites
-# Rewrites dynamic creation routes and dynamic user paths to static HTML shells (HTTP 200)
+# Rewrites dynamic creation routes and dynamic entity paths to exact static HTML shells (HTTP 200)
 
+# Farm Sub-routes (Specific paths first)
+/farms/new /farms/new.html 200
+/farms/crops/new /farms/crops/new.html 200
 /farms/:farmId/crops/new /farms/crops/new?farmId=:farmId 200
-/farms/* /farms.html 200
-/crops/* /crops.html 200
-/analysis/* /analysis.html 200
+/farms/:farmId/crops /farms/_/crops.html 200
+/farms/:farmId/edit /farms/_/edit.html 200
+/farms/:farmId/risk /farms/_/risk.html 200
+/farms/:farmId/weather /farms/_/weather.html 200
+/farms/:farmId /farms/_.html 200
+
+# Crop Sub-routes
+/crops/:cropId/edit /crops/_/edit.html 200
+/crops/:cropId/risk /crops/_/risk.html 200
+/crops/:cropId /crops/_.html 200
+
+# Analysis Sub-routes
+/analysis/history /analysis/history.html 200
+/analysis/:analysisId /analysis/_.html 200
+
+# Top-level SPA Fallbacks
+/farms /farms.html 200
+/crops /crops.html 200
+/analysis /analysis.html 200
 /* /index.html 200
