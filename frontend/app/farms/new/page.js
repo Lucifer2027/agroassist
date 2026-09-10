@@ -44,10 +44,14 @@ export default function CreateFarmPage() {
     if (!formData.size_hectares || parseFloat(formData.size_hectares) <= 0) {
       newErrors.size_hectares = 'Area in hectares must be greater than 0';
     }
-    if (formData.latitude && (parseFloat(formData.latitude) < -90 || parseFloat(formData.latitude) > 90)) {
+    if (!formData.latitude || formData.latitude.trim() === '') {
+      newErrors.latitude = 'Latitude coordinate is required';
+    } else if (isNaN(parseFloat(formData.latitude)) || parseFloat(formData.latitude) < -90 || parseFloat(formData.latitude) > 90) {
       newErrors.latitude = 'Latitude must be between -90 and 90';
     }
-    if (formData.longitude && (parseFloat(formData.longitude) < -180 || parseFloat(formData.longitude) > 180)) {
+    if (!formData.longitude || formData.longitude.trim() === '') {
+      newErrors.longitude = 'Longitude coordinate is required';
+    } else if (isNaN(parseFloat(formData.longitude)) || parseFloat(formData.longitude) < -180 || parseFloat(formData.longitude) > 180) {
       newErrors.longitude = 'Longitude must be between -180 and 180';
     }
     setErrors(newErrors);
@@ -64,8 +68,8 @@ export default function CreateFarmPage() {
       const payload = {
         farm_name: formData.name.trim(),
         location: formData.location.trim() || 'Central Region',
-        latitude: formData.latitude ? parseFloat(formData.latitude) : null,
-        longitude: formData.longitude ? parseFloat(formData.longitude) : null,
+        latitude: parseFloat(formData.latitude),
+        longitude: parseFloat(formData.longitude),
         area: parseFloat(formData.size_hectares) || 1.0,
         area_unit: 'hectares',
         soil_type: formData.soil_type || 'Loam',
@@ -88,7 +92,7 @@ export default function CreateFarmPage() {
       <div className="space-y-6 max-w-3xl mx-auto">
         <PageHeader
           title="Register New Farm Field"
-          subtitle="Add geographic coordinates, area in hectares, and soil parameters."
+          subtitle="Add compulsory geographic coordinates (Latitude/Longitude), field area, and soil parameters."
           icon={<Tractor className="w-6 h-6 text-emerald-400" />}
           breadcrumbs={['Dashboard', 'Farms', 'New Farm']}
           action={
@@ -103,7 +107,7 @@ export default function CreateFarmPage() {
         <Card glow className="p-6">
           <CardHeader className="px-0 pt-0">
             <CardTitle>Field Information</CardTitle>
-            <CardDescription>Enter details matching your agricultural plot</CardDescription>
+            <CardDescription>Enter compulsory coordinates and parameters for your plot</CardDescription>
           </CardHeader>
 
           {errorMessage && (
@@ -149,7 +153,7 @@ export default function CreateFarmPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input
-                label="Latitude (Optional)"
+                label="Latitude"
                 name="latitude"
                 type="number"
                 step="0.000001"
@@ -158,9 +162,10 @@ export default function CreateFarmPage() {
                 onChange={handleChange}
                 error={errors.latitude}
                 leftIcon={<Navigation className="w-4 h-4" />}
+                required
               />
               <Input
-                label="Longitude (Optional)"
+                label="Longitude"
                 name="longitude"
                 type="number"
                 step="0.000001"
@@ -169,6 +174,7 @@ export default function CreateFarmPage() {
                 onChange={handleChange}
                 error={errors.longitude}
                 leftIcon={<Navigation className="w-4 h-4" />}
+                required
               />
             </div>
 
