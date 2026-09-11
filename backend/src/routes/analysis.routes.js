@@ -5,7 +5,7 @@ const validate = require('../middleware/validate.middleware');
 const { strictRateLimiter } = require('../middleware/security.middleware');
 const { diseaseAnalysisRequestSchema, historyQuerySchema } = require('../validators/analysis.validator');
 
-const router = express.Router();
+const router = express.Router() ;
 
 // Require JWT authentication for all analysis endpoints
 router.use(authenticate);
