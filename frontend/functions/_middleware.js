@@ -1,5 +1,5 @@
 export async function onRequest(context) {
-  const workerUrl = "https://frontend.saswataghatak70-06a.workers.dev";
+  const workerUrl = "https://agroassist-4sv.saswataghatak70-06a.workers.dev";
 
   const incomingUrl = new URL(context.request.url);
   const targetUrl = new URL(workerUrl);
