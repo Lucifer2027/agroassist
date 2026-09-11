@@ -78,6 +78,27 @@ const runMigrations = async () => {
       logger.info(`Migration '${migrationName}' is already applied. Schema verified idempotently.`);
     }
 
+    // Ensure column types in existing tables are updated to TEXT to prevent truncation errors
+    try {
+      await connection.query(`
+        ALTER TABLE cloudinary_assets 
+        MODIFY COLUMN original_url TEXT NOT NULL,
+        MODIFY COLUMN optimized_url TEXT NOT NULL,
+        MODIFY COLUMN annotated_url TEXT NULL
+      `);
+    } catch (alterErr) {
+      logger.warn(`Non-critical schema modification notice (cloudinary_assets): ${alterErr.message}`);
+    }
+
+    try {
+      const [diseaseCols] = await connection.query("SHOW COLUMNS FROM disease_analyses LIKE 'original_url'");
+      if (diseaseCols && diseaseCols.length > 0) {
+        await connection.query("ALTER TABLE disease_analyses MODIFY COLUMN original_url TEXT NULL");
+      }
+    } catch (alterErr) {
+      logger.warn(`Non-critical schema modification notice (disease_analyses): ${alterErr.message}`);
+    }
+
     // Run structural verification
     await verifyMySQL();
 

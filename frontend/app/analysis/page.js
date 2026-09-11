@@ -16,6 +16,7 @@ import { useToast } from '@/context/ToastContext';
 import { farmsApi } from '@/lib/api/farms';
 import { uploadsApi } from '@/lib/api/uploads';
 import { analysisApi } from '@/lib/api/analysis';
+import { CldUploadWidget } from 'next-cloudinary';
 import {
   Scan,
   Upload,
@@ -89,6 +90,8 @@ function DiseaseScannerContent() {
   // Image & Upload state
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState('');
+  const [cloudinaryResult, setCloudinaryResult] = useState(null);
+  const [cloudName, setCloudName] = useState(process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'agroassist');
   const [isDragging, setIsDragging] = useState(false);
 
   // Analysis pipeline stage state
@@ -230,39 +233,56 @@ function DiseaseScannerContent() {
     setErrorMessage('');
 
     try {
-      // Step 1: Upload / Cloudinary Signature Request
-      setUploadStage('signing');
-      setProgressMessage('Requesting Cloudinary upload signature from backend...');
-      await uploadsApi.getUploadSignature({
-        farmId: selectedFarmId,
-        cropId: selectedCropId,
-      });
+      let secureUrl = '';
+      let publicId = '';
+      let assetWidth = 1200;
+      let assetHeight = 900;
+      let assetFormat = 'jpg';
 
-      // Step 2: Register Metadata
-      setUploadStage('optimizing');
-      setProgressMessage('Registering Cloudinary asset metadata in MySQL operational DB...');
-      
-      let imageUrlToUse;
-      if (selectedFile) {
-        imageUrlToUse = await new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.readAsDataURL(selectedFile);
-          reader.onload = () => resolve(reader.result);
-          reader.onerror = (err) => reject(err);
+      if (cloudinaryResult?.secure_url) {
+        secureUrl = cloudinaryResult.secure_url;
+        publicId = cloudinaryResult.public_id || `crop_${selectedCropId}_${Date.now()}`;
+        assetWidth = cloudinaryResult.width || 1200;
+        assetHeight = cloudinaryResult.height || 900;
+        assetFormat = cloudinaryResult.format || 'jpg';
+      } else if (selectedFile) {
+        // Step 1: Obtain Cloudinary Upload Signature from backend
+        setUploadStage('signing');
+        setProgressMessage('Requesting Cloudinary upload signature from backend...');
+        const sigRes = await uploadsApi.getUploadSignature({
+          farmId: selectedFarmId,
+          cropId: selectedCropId,
         });
+
+        const sigData = sigRes.data || sigRes;
+
+        // Step 2: Upload image binary directly to Cloudinary CDN
+        setUploadStage('uploading');
+        setProgressMessage('Uploading crop leaf image to Cloudinary CDN...');
+        const cloudResult = await uploadsApi.uploadToCloudinary(selectedFile, sigData);
+
+        secureUrl = cloudResult.secure_url;
+        publicId = cloudResult.public_id;
+        assetWidth = cloudResult.width || 1200;
+        assetHeight = cloudResult.height || 900;
+        assetFormat = cloudResult.format || 'jpg';
       } else {
-        imageUrlToUse = previewUrl || 'https://images.unsplash.com/photo-1592417817098-8f3d6eb1626d?auto=format&fit=crop&w=800&q=80';
+        secureUrl = previewUrl || 'https://images.unsplash.com/photo-1592417817098-8f3d6eb1626d?auto=format&fit=crop&w=800&q=80';
+        publicId = `sample_crop_${selectedCropId}_${Date.now()}`;
       }
 
+      // Step 3: Register Metadata in MySQL operational DB
+      setUploadStage('optimizing');
+      setProgressMessage('Registering Cloudinary asset metadata in MySQL operational DB...');
       const metaRes = await uploadsApi.registerMetadata({
         farm_id: selectedFarmId,
         crop_id: selectedCropId,
-        public_id: `crop_${selectedCropId}_${Date.now()}`,
-        original_url: imageUrlToUse,
+        public_id: publicId,
+        original_url: secureUrl,
         resource_type: 'image',
-        width: 1200,
-        height: 900,
-        format: 'jpg',
+        width: assetWidth,
+        height: assetHeight,
+        format: assetFormat,
       });
 
       const assetId = metaRes.data?.id || metaRes.id || metaRes.asset_id;
@@ -385,6 +405,7 @@ function DiseaseScannerContent() {
                       onClick={() => {
                         setPreviewUrl('');
                         setSelectedFile(null);
+                        setCloudinaryResult(null);
                       }}
                       leftIcon={<Trash2 className="w-3.5 h-3.5" />}
                     >
@@ -393,6 +414,42 @@ function DiseaseScannerContent() {
                   </div>
                 </div>
               )}
+
+              {/* Official Cloudinary Next.js Starter Upload Widget Component */}
+              <CldUploadWidget
+                cloudName={cloudName || process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "agroassist"}
+                uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "agroassist_unsigned"}
+                options={{
+                  sources: ['local', 'camera', 'url'],
+                  multiple: false,
+                  maxFiles: 1,
+                  clientAllowedFormats: ['jpg', 'jpeg', 'png', 'webp'],
+                }}
+                onSuccess={(result) => {
+                  if (result?.info?.secure_url) {
+                    setCloudinaryResult(result.info);
+                    setPreviewUrl(result.info.secure_url);
+                    setSelectedFile(null);
+                    showSuccess("Image uploaded to Cloudinary successfully!");
+                  }
+                }}
+                onError={(err) => {
+                  showError("Cloudinary upload notice: " + (err?.message || "Unable to upload via widget. You can also drag & drop image."));
+                }}
+              >
+                {({ open }) => (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-full border-emerald-500/40 text-emerald-300 hover:bg-emerald-950/40"
+                    onClick={() => open()}
+                    leftIcon={<Cloud className="w-4 h-4 text-emerald-400" />}
+                  >
+                    Upload via Cloudinary Next.js Widget
+                  </Button>
+                )}
+              </CldUploadWidget>
 
               {/* Action Trigger Button */}
               <Button
