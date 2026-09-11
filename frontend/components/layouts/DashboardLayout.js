@@ -288,7 +288,7 @@ export function DashboardLayout({ children }) {
             </button>
             <div className="hidden sm:flex items-center gap-2 text-xs text-slate-400 font-medium bg-slate-900/80 border border-slate-800 rounded-lg px-3 py-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>Backend API: localhost:5000</span>
+              <span>Backend API Connected</span>
             </div>
           </div>
 
